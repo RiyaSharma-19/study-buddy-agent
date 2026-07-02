@@ -1,4 +1,4 @@
-# StudyDx
+# Studdy buddy Agent
 
 ## Problem
 Existing study tools (flashcard generators, note summarizers, video
