@@ -40,7 +40,7 @@ app: FastAPI = get_fast_api_app(
     web=True,
     artifact_service_uri=artifact_service_uri,
     allow_origins=allow_origins,
-    session_service_uri=session_service_uri,
+    session_service_uri="sqlite:///./sessions.db",
     otel_to_cloud=False,  # disabled: no Google Cloud project configured for local use
 )
 app.title = "study-buddy-agent"
