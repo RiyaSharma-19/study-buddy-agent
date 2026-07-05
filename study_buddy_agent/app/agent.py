@@ -218,6 +218,7 @@ def answer_gate(ctx: Context, node_input: Any):
             "flashcard": {"question": question, "answer": answer},
             "user_answer": user_answer
         })
+        ctx.state["tutor_input"] = tutor_payload
         return {"tutor_input": tutor_payload}
 
     # First execution: save flashcard to state and request input
@@ -249,16 +250,14 @@ tutor_agent = Agent(
     name="tutor_agent",
     model=shared_model,
     instruction=(
-        "You are the Tutor Agent. The previous node has passed you a JSON string in the key 'tutor_input'. "
-        "Parse it to get the flashcard (with question and correct answer) and the user_answer. "
-        "Evaluate whether the user_answer is correct given the flashcard's correct answer. "
-        "Classify the mistake type as exactly one of:\n"
-        "- 'forgot': user didn't know the answer, left it blank, or couldn't recall it.\n"
-        "- 'misunderstood': user has a misconception or wrong understanding of the concept.\n"
-        "- 'careless error': user's answer is correct or has only a minor typo/slip but gets the core concept right.\n"
-        "If is_correct is True, still classify as 'careless error' with a brief positive explanation. "
-        "Provide a tailored explanation based on this classification. "
-        "Strictly adhere to the output schema."
+        "You are the Tutor Agent. Evaluate this study session data:\n\n"
+        "{tutor_input}\n\n"
+        "The JSON above contains the flashcard (question and correct answer) and the user_answer. "
+        "Parse it and evaluate whether the user_answer is correct given the flashcard's correct answer. "
+        "Classify the mistake as exactly one of: 'forgot', 'misunderstood', or 'careless error'. "
+        "Provide a tailored explanation. Strictly adhere to the output schema."
+        "- 'misunderstood': ONLY if the user states something factually wrong or demonstrates a clear misconception. An incomplete answer is NOT misunderstood.\n"
+        "- 'careless error': if the user's answer is correct OR incomplete but not wrong. If the core concept is right but details are missing, this is careless error, not misunderstood.\n"
     ),
     output_schema=TutorOutput,
 )
