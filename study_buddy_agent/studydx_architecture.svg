@@ -1,0 +1,188 @@
+<svg viewBox="0 0 860 700" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="860" height="700" fill="#0f1117" rx="12"/>
+
+  <!-- Title -->
+  <text x="430" y="35" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">StudyDx — Workflow Architecture</text>
+  <text x="430" y="54" text-anchor="middle" font-size="11" fill="#666666">Google ADK 2.3.0 · Graph-based Multi-Agent System</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 1: START → Validate Input              -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- START circle -->
+  <circle cx="80" cy="120" r="28" fill="#1a1a2e" stroke="#555" stroke-width="2"/>
+  <text x="80" y="116" text-anchor="middle" font-size="10" font-weight="700" fill="#aaaaaa">START</text>
+  <text x="80" y="130" text-anchor="middle" font-size="9" fill="#666666">user input</text>
+
+  <!-- Arrow START → Validate -->
+  <line x1="109" y1="120" x2="155" y2="120" stroke="#555555" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- Validate Input node -->
+  <rect x="156" y="88" width="160" height="64" rx="8" fill="#0d2b0d" stroke="#4CAF50" stroke-width="2"/>
+  <text x="236" y="108" text-anchor="middle" font-size="12" font-weight="700" fill="#4CAF50">validate_input</text>
+  <text x="236" y="124" text-anchor="middle" font-size="10" fill="#88cc88">Security layer</text>
+  <text x="236" y="140" text-anchor="middle" font-size="9" fill="#558855">Prompt injection · Size limit</text>
+
+  <!-- Arrow Validate → Router -->
+  <line x1="316" y1="120" x2="362" y2="120" stroke="#4CAF50" stroke-width="1.5" marker-end="url(#arr-green)"/>
+  <text x="339" y="112" text-anchor="middle" font-size="9" fill="#4CAF50">ok</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 1 continued: Router                    -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- Router node -->
+  <rect x="363" y="88" width="160" height="64" rx="8" fill="#0d2b0d" stroke="#4CAF50" stroke-width="2"/>
+  <text x="443" y="108" text-anchor="middle" font-size="12" font-weight="700" fill="#4CAF50">decide_input_type</text>
+  <text x="443" y="124" text-anchor="middle" font-size="10" fill="#88cc88">Plain code — no LLM</text>
+  <text x="443" y="140" text-anchor="middle" font-size="9" fill="#558855">notes vs topic routing</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- BLOCKED path (top) from Validate           -->
+  <!-- ─────────────────────────────────────────── -->
+  <!-- blocked label above validate -->
+  <text x="236" y="80" text-anchor="middle" font-size="9" fill="#FF4B4B">blocked → END</text>
+  <line x1="236" y1="88" x2="236" y2="74" stroke="#FF4B4B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-red)"/>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 2: Two paths from Router               -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- Left path label: has_notes -->
+  <text x="310" y="185" text-anchor="middle" font-size="9" fill="#4CAF50">has_notes</text>
+  <!-- Arrow Router → Content Agent (left/down) -->
+  <path d="M443,152 L443,170 L310,170 L310,210" stroke="#4CAF50" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+
+  <!-- Right path label: topic_only -->
+  <text x="580" y="185" text-anchor="middle" font-size="9" fill="#FF8C00">topic_only</text>
+  <!-- Arrow Router → Fetch (right/down) -->
+  <path d="M443,152 L443,170 L580,170 L580,210" stroke="#FF8C00" stroke-width="1.5" fill="none" marker-end="url(#arr-orange)"/>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 2 LEFT: Content Agent                  -->
+  <!-- ─────────────────────────────────────────── -->
+  <rect x="210" y="211" width="200" height="64" rx="8" fill="#0d1f3c" stroke="#4A90D9" stroke-width="2"/>
+  <text x="310" y="231" text-anchor="middle" font-size="12" font-weight="700" fill="#4A90D9">content_agent</text>
+  <text x="310" y="247" text-anchor="middle" font-size="10" fill="#7ab0e0">Gemini 2.5 Flash</text>
+  <text x="310" y="263" text-anchor="middle" font-size="9" fill="#4a7aaa">Generates flashcards from notes</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 2 RIGHT: Fetch + Wikipedia             -->
+  <!-- ─────────────────────────────────────────── -->
+  <rect x="490" y="211" width="180" height="64" rx="8" fill="#0d2b0d" stroke="#4CAF50" stroke-width="2"/>
+  <text x="580" y="231" text-anchor="middle" font-size="11" font-weight="700" fill="#4CAF50">fetch_topic_content</text>
+  <text x="580" y="247" text-anchor="middle" font-size="10" fill="#88cc88">MCP Wikipedia fetch</text>
+  <text x="580" y="263" text-anchor="middle" font-size="9" fill="#558855">Real external content</text>
+
+  <!-- Wikipedia external box -->
+  <rect x="690" y="220" width="110" height="46" rx="6" fill="#111" stroke="#444" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="745" y="239" text-anchor="middle" font-size="10" fill="#666">Wikipedia</text>
+  <text x="745" y="255" text-anchor="middle" font-size="9" fill="#444">REST API</text>
+
+  <!-- Arrow Fetch → Wikipedia -->
+  <line x1="670" y1="243" x2="688" y2="243" stroke="#444" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arr-gray)"/>
+
+  <!-- Arrow Fetch → Content Agent (merge back) -->
+  <path d="M580,275 L580,295 L310,295 L310,275" stroke="#FF8C00" stroke-width="1.5" fill="none" marker-end="url(#arr-orange)"/>
+  <text x="445" y="306" text-anchor="middle" font-size="9" fill="#FF8C00">fetched content → flashcard generation</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 3: Answer Gate (HITL)                  -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- Arrow Content → Answer Gate -->
+  <line x1="310" y1="275" x2="310" y2="330" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <rect x="190" y="331" width="240" height="80" rx="8" fill="#2a1020" stroke="#FF8C00" stroke-width="2"/>
+  <text x="310" y="354" text-anchor="middle" font-size="12" font-weight="700" fill="#FF8C00">answer_gate</text>
+  <text x="310" y="370" text-anchor="middle" font-size="10" fill="#cc8844">Human-in-the-Loop (HITL)</text>
+  <text x="310" y="385" text-anchor="middle" font-size="9" fill="#886633">Suspends workflow · Persists to SQLite</text>
+  <text x="310" y="399" text-anchor="middle" font-size="9" fill="#886633">Resumes on functionResponse</text>
+
+  <!-- User box -->
+  <rect x="470" y="345" width="120" height="52" rx="6" fill="#1a1010" stroke="#FF8C00" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="530" y="367" text-anchor="middle" font-size="11" font-weight="600" fill="#FF8C00">User</text>
+  <text x="530" y="383" text-anchor="middle" font-size="9" fill="#886633">submits answer</text>
+
+  <!-- pause arrow -->
+  <line x1="430" y1="362" x2="468" y2="362" stroke="#FF8C00" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+  <text x="449" y="355" text-anchor="middle" font-size="8" fill="#FF8C00">pause</text>
+
+  <!-- resume arrow -->
+  <line x1="468" y1="378" x2="430" y2="378" stroke="#FF8C00" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+  <text x="449" y="393" text-anchor="middle" font-size="8" fill="#FF8C00">resume</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 4: Tutor Agent                         -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- Arrow Answer Gate → Tutor -->
+  <line x1="310" y1="411" x2="310" y2="455" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <rect x="160" y="456" width="300" height="80" rx="8" fill="#0d1f3c" stroke="#4A90D9" stroke-width="2"/>
+  <text x="310" y="478" text-anchor="middle" font-size="12" font-weight="700" fill="#4A90D9">tutor_agent</text>
+  <text x="310" y="496" text-anchor="middle" font-size="10" fill="#7ab0e0">Gemini 2.5 Flash · Classifies mistake type</text>
+  <text x="310" y="512" text-anchor="middle" font-size="9" fill="#4a7aaa">forgot  ·  misunderstood  ·  careless error</text>
+  <text x="310" y="527" text-anchor="middle" font-size="9" fill="#4a7aaa">Tailored explanation per category</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ROW 5: Planner Agent                       -->
+  <!-- ─────────────────────────────────────────── -->
+
+  <!-- Arrow Tutor → Planner -->
+  <line x1="310" y1="536" x2="310" y2="578" stroke="#4A90D9" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <rect x="160" y="579" width="300" height="80" rx="8" fill="#0d1f3c" stroke="#4A90D9" stroke-width="2"/>
+  <text x="310" y="601" text-anchor="middle" font-size="12" font-weight="700" fill="#4A90D9">planner_agent</text>
+  <text x="310" y="619" text-anchor="middle" font-size="10" fill="#7ab0e0">Gemini 2.5 Flash · Review scheduling</text>
+  <text x="310" y="635" text-anchor="middle" font-size="9" fill="#4a7aaa">forgot → 1 day</text>
+  <text x="310" y="649" text-anchor="middle" font-size="9" fill="#4a7aaa">misunderstood → 3 days  ·  careless → 7 days</text>
+
+  <!-- END circle -->
+  <circle cx="310" cy="690" r="0"/>
+  <!-- Arrow Planner → END label -->
+  <line x1="310" y1="659" x2="310" y2="680" stroke="#555" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <text x="310" y="694" text-anchor="middle" font-size="10" fill="#555">END</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- LEGEND                                     -->
+  <!-- ─────────────────────────────────────────── -->
+  <rect x="600" y="440" width="240" height="110" rx="8" fill="#111" stroke="#333" stroke-width="1"/>
+  <text x="720" y="460" text-anchor="middle" font-size="11" font-weight="700" fill="#aaa">Legend</text>
+
+  <rect x="614" y="470" width="14" height="14" rx="3" fill="#0d1f3c" stroke="#4A90D9" stroke-width="1.5"/>
+  <text x="634" y="482" font-size="10" fill="#ccc">LLM Agent (Gemini)</text>
+
+  <rect x="614" y="492" width="14" height="14" rx="3" fill="#0d2b0d" stroke="#4CAF50" stroke-width="1.5"/>
+  <text x="634" y="504" font-size="10" fill="#ccc">Deterministic code node</text>
+
+  <rect x="614" y="514" width="14" height="14" rx="3" fill="#2a1020" stroke="#FF8C00" stroke-width="1.5"/>
+  <text x="634" y="526" font-size="10" fill="#ccc">Human-in-the-Loop node</text>
+
+  <rect x="614" y="536" width="14" height="14" rx="3" fill="#111" stroke="#444" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="634" y="548" font-size="10" fill="#ccc">External service (Wikipedia)</text>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- ARROW MARKERS                              -->
+  <!-- ─────────────────────────────────────────── -->
+  <defs>
+    <marker id="arr-gray" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555555"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4CAF50"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#FF8C00"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4A90D9"/>
+    </marker>
+    <marker id="arr-red" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#FF4B4B"/>
+    </marker>
+  </defs>
+
+</svg>
