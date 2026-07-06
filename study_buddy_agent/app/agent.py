@@ -107,7 +107,7 @@ def fetch_wikipedia_summary(topic: str) -> str:
 
 # Common model configuration
 shared_model = Gemini(
-    model="gemini-2.5-flash",
+    model="gemini-2.0-flash",
     retry_options=types.HttpRetryOptions(attempts=3),
 )
 
