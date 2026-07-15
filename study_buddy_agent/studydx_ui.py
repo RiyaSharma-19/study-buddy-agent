@@ -136,45 +136,93 @@ def extract_flashcard(events: list[dict]) -> tuple[dict | None, str | None, str 
     return None, None, None
 
 
-def extract_tutor_result(events: list[dict]) -> dict | None:
-    for e in reversed(events):
-        if e.get("author") != "tutor_agent":
-            continue
-        if e.get("partial"):
-            continue
-        content = e.get("content", {})
-        for part in (content.get("parts", []) if content else []):
-            text = part.get("text", "")
-            if not text:
-                continue
-            try:
-                text = text.strip().strip("```json").strip("```").strip()
-                data = json.loads(text)
-                if "classification" in data:
-                    return data
-            except Exception:
-                pass
+def _try_parse_json(text: str) -> dict | None:
+    """Try multiple strategies to extract a JSON object from LLM text output."""
+    if not text:
+        return None
+    text = text.strip()
+
+    # Strategy 1: direct parse
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Strategy 2: strip markdown code fences (```json ... ``` or ``` ... ```)
+    import re
+    fence_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?\s*```", text, re.DOTALL)
+    if fence_match:
+        try:
+            return json.loads(fence_match.group(1).strip())
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Strategy 3: find the first { ... } block
+    brace_match = re.search(r"\{.*\}", text, re.DOTALL)
+    if brace_match:
+        try:
+            return json.loads(brace_match.group(0))
+        except (json.JSONDecodeError, ValueError):
+            pass
+
     return None
 
 
-def extract_planner_result(events: list[dict]) -> dict | None:
+def _extract_agent_result(events: list[dict], author: str, required_key: str) -> dict | None:
+    """Generic extractor for agent results — tries text parts of matching events."""
     for e in reversed(events):
-        if e.get("author") != "planner_agent":
+        if e.get("author") != author:
             continue
         if e.get("partial"):
             continue
         content = e.get("content", {})
         for part in (content.get("parts", []) if content else []):
             text = part.get("text", "")
-            if not text:
-                continue
-            try:
-                text = text.strip().strip("```json").strip("```").strip()
-                data = json.loads(text)
-                if "review_delay_days" in data:
-                    return data
-            except Exception:
-                pass
+            data = _try_parse_json(text)
+            if data and required_key in data:
+                return data
+    return None
+
+
+def extract_tutor_result(events: list[dict]) -> dict | None:
+    return _extract_agent_result(events, "tutor_agent", "classification")
+
+
+def extract_planner_result(events: list[dict]) -> dict | None:
+    return _extract_agent_result(events, "planner_agent", "review_delay_days")
+
+
+def extract_error_from_events(events: list[dict]) -> str | None:
+    """Scan SSE events for backend errors and return a user-friendly message."""
+    for e in events:
+        error_code = e.get("errorCode", "")
+        error_msg = e.get("errorMessage") or e.get("error") or ""
+
+        if not error_code and not error_msg:
+            continue
+
+        # Quota / rate-limit errors
+        if "429" in str(error_msg) or "RESOURCE_EXHAUSTED" in str(error_msg) or "ResourceExhausted" in str(error_code):
+            return (
+                "⚠️ **Gemini API quota exceeded.** Your free-tier daily limit has been reached.\n\n"
+                "**How to fix:**\n"
+                "- Wait for the daily quota to reset (usually resets at midnight PT), or\n"
+                "- [Upgrade your API plan](https://aistudio.google.com/apikey) and enable billing\n\n"
+                "_The workflow ran correctly up to the flashcard generation step — "
+                "only the LLM call failed due to quota._"
+            )
+
+        # Auth errors
+        if "401" in str(error_msg) or "403" in str(error_msg) or "PERMISSION_DENIED" in str(error_msg):
+            return (
+                "🔑 **API authentication error.** Your Gemini API key may be invalid or expired.\n\n"
+                "Check your `.env` file and ensure `GOOGLE_API_KEY` is set to a valid key."
+            )
+
+        # Generic backend error — show the raw message (truncated)
+        short_msg = str(error_msg)[:300]
+        return f"❌ **Backend error** (`{error_code}`): {short_msg}"
+
     return None
 
 
@@ -218,7 +266,12 @@ if st.session_state.stage == "input":
                         st.session_state.stage         = "answering"
                         st.rerun()
                     else:
-                        st.error("Could not generate a flashcard. Check that your backend server is running.")
+                        # Check if the backend returned a specific error
+                        backend_error = extract_error_from_events(events)
+                        if backend_error:
+                            st.error(backend_error)
+                        else:
+                            st.error("Could not generate a flashcard. Check that your backend server is running.")
                 except requests.exceptions.ConnectionError:
                     st.error("Cannot connect to backend. Make sure the server is running on port 8000.")
                 except Exception as ex:
@@ -254,6 +307,14 @@ elif st.session_state.stage == "answering":
                         )
                         tutor  = extract_tutor_result(events)
                         planner = extract_planner_result(events)
+
+                        # Check if the agents failed (e.g. quota exhausted mid-flow)
+                        if tutor is None and planner is None:
+                            backend_error = extract_error_from_events(events)
+                            if backend_error:
+                                st.error(backend_error)
+                                st.stop()
+
                         st.session_state.result = {
                             "answer":  answer.strip(),
                             "tutor":   tutor,

@@ -178,6 +178,7 @@ https://github.com/RiyaSharma-19/study-buddy-agent
 - PDF and document upload support
 - Hindi/English bilingual support (Gemini handles this natively)
 
+
 ---
 
 ## Author

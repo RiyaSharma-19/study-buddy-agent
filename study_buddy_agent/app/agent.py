@@ -107,7 +107,7 @@ def fetch_wikipedia_summary(topic: str) -> str:
 
 # Common model configuration
 shared_model = Gemini(
-    model="gemini-2.0-flash",
+    model="gemini-2.0-flash-001",
     retry_options=types.HttpRetryOptions(attempts=3),
 )
 
@@ -130,6 +130,13 @@ def extract_text_from_input(node_input: Any) -> str:
     return str(node_input)
 
 # Nodes for workflow
+
+# 0) Blocked Response Node (terminal node for invalid input)
+@node(name="blocked_response")
+def blocked_response_node(ctx: Context, node_input: Any):
+    error = ctx.state.get("error", "Input was blocked.")
+    return f"⚠️ Your input was blocked: {error}"
+
 
 # 1) Validation Node (Security)
 @node(name="validate_input")
@@ -212,14 +219,15 @@ def answer_gate(ctx: Context, node_input: Any):
         question = flashcard.get("question", "Unknown question") if isinstance(flashcard, dict) else str(flashcard)
         answer = flashcard.get("answer", "Unknown answer") if isinstance(flashcard, dict) else ""
         
-        # Return explicit JSON string so Tutor Agent actually receives it
+        # Build a clear text payload so the Tutor Agent can parse it
         import json as _json
         tutor_payload = _json.dumps({
             "flashcard": {"question": question, "answer": answer},
             "user_answer": user_answer
         })
         ctx.state["tutor_input"] = tutor_payload
-        return {"tutor_input": tutor_payload}
+        # Return as plain text so the agent receives it as a readable message
+        return tutor_payload
 
     # First execution: save flashcard to state and request input
     if not flashcards:
@@ -250,12 +258,14 @@ tutor_agent = Agent(
     name="tutor_agent",
     model=shared_model,
     instruction=(
-        "You are the Tutor Agent. Evaluate this study session data:\n\n"
-        "{tutor_input}\n\n"
-        "The JSON above contains the flashcard (question and correct answer) and the user_answer. "
-        "Parse it and evaluate whether the user_answer is correct given the flashcard's correct answer. "
+        "You are the Tutor Agent. You will receive a JSON string as your input message "
+        "containing a 'flashcard' object (with 'question' and 'answer' fields) and a "
+        "'user_answer' string. Parse the JSON from your input, then evaluate whether the "
+        "user_answer is correct given the flashcard's correct answer. "
         "Classify the mistake as exactly one of: 'forgot', 'misunderstood', or 'careless error'. "
-        "Provide a tailored explanation. Strictly adhere to the output schema."
+        "Provide a tailored explanation. Strictly adhere to the output schema.\n\n"
+        "Classification guidelines:\n"
+        "- 'forgot': The user could not recall the answer at all or gave a blank/irrelevant response.\n"
         "- 'misunderstood': ONLY if the user states something factually wrong or demonstrates a clear misconception. An incomplete answer is NOT misunderstood.\n"
         "- 'careless error': if the user's answer is correct OR incomplete but not wrong. If the core concept is right but details are missing, this is careless error, not misunderstood.\n"
     ),
@@ -284,6 +294,7 @@ root_agent = Workflow(
         (START, validate_input_node),
         (validate_input_node, {
             "ok": decide_input_type,
+            "blocked": blocked_response_node,
         }),
         (decide_input_type, {
             "has_notes": content_agent,
